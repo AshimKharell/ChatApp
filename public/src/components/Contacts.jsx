@@ -1,14 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import Logo from '../assets/chatting-app.png';
 import ContactContainerCss from '../componentsCss/ContactContainerCss';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faBell } from '@fortawesome/free-solid-svg-icons';
 
 export default function Contacts({ contacts, currentUser, changeChat, notification = [], setNotification }) {
   const [currentUserName, setCurrentUserName] = useState(undefined);
   const [currentUserImage, setCurrentUserImage] = useState(undefined);
   const [currentSelected, setCurrentSelected] = useState(undefined);
-  const [showNotifications, setShowNotifications] = useState(false);
 
   useEffect(() => {
     if (currentUser) {
@@ -17,33 +14,17 @@ export default function Contacts({ contacts, currentUser, changeChat, notificati
     }
   }, [currentUser]);
 
-  const getSenderUsername = (from) => {
-    const contact = contacts.find(contact => contact._id === from);
-    return contact ? contact.username : 'Unknown';
-  };
-
-  const getContactFromUserId = (userId) => {
-    return contacts.find(contact => contact._id === userId);
-  };
-
   const changeCurrentChat = (index, contact) => {
     setCurrentSelected(index);
     changeChat(contact);
+
+    // Clear notifications for the selected contact
+    setNotification(prev => prev.filter(notif => notif.from !== contact._id));
   };
 
-  const handleBellClick = () => {
-    setShowNotifications(!showNotifications);
-  };
-
-  const handleNotificationClick = (from) => {
-    const contact = getContactFromUserId(from);
-    if (contact) {
-      const contactIndex = contacts.indexOf(contact);
-      setCurrentSelected(contactIndex);
-      changeChat(contact);
-      setNotification([]); // Clear all notifications
-      setShowNotifications(false); // Hide notifications dropdown
-    }
+  // Count the number of messages from a specific contact
+  const getNotificationCount = (contactId) => {
+    return notification.filter(notif => notif.from === contactId).length;
   };
 
   return (
@@ -52,36 +33,7 @@ export default function Contacts({ contacts, currentUser, changeChat, notificati
         <ContactContainerCss>
           <div className="brand">
             <img src={Logo} alt="logo" />
-            <h3>
-              Instant Talk
-              <div style={{ position: 'relative', display: 'inline-block' }}>
-                <FontAwesomeIcon
-                  icon={faBell}
-                  style={{ marginLeft: '140px', cursor: "pointer" }}
-                  onClick={handleBellClick}
-                />
-                {notification.length > 0 && (
-                  <div
-                    style={{
-                      position: 'absolute',
-                      top: '-10px',
-                      right: '-10px',
-                      backgroundColor: 'red',
-                      color: 'white',
-                      borderRadius: '50%',
-                      width: '20px',
-                      height: '20px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: '12px',
-                    }}
-                  >
-                    {notification.length}
-                  </div>
-                )}
-              </div>
-            </h3>
+            <h3>Instant Talk</h3>
           </div>
 
           <div className="contacts">
@@ -98,7 +50,25 @@ export default function Contacts({ contacts, currentUser, changeChat, notificati
                   />
                 </div>
                 <div className="username">
-                  <h3>{contact.username}</h3>
+                  <h3 style={{ display: 'inline-block', marginRight: '10px' }}>{contact.username}</h3>
+                  {getNotificationCount(contact._id) > 0 && (
+                    <span className="notification-dot" style={{ 
+                      width: "20px",
+                      height: "20px",
+                      backgroundColor: "red",
+                      border: "3px solid rgb(51, 51, 51)",
+                      borderRadius: "50%",
+                      display: 'inline-block',
+                      marginLeft: '-78px',
+                      verticalAlign: "top",
+                      color: 'white',
+                      fontSize: '15px',
+                      lineHeight: '20px',
+                      textAlign: 'center',
+                     }}>
+                      {getNotificationCount(contact._id)}
+                    </span>
+                  )}
                 </div>
               </div>
             ))}
@@ -115,45 +85,6 @@ export default function Contacts({ contacts, currentUser, changeChat, notificati
               <h2>{currentUserName}</h2>
             </div>
           </div>
-
-          {showNotifications && (
-            <div className="notifications-dropdown" style={{
-              position: 'absolute',
-              top: '50px',
-              right: '20px',
-              backgroundColor: '#f9f9f9',
-              border: '1px solid #ddd',
-              padding: '15px',
-              borderRadius: '8px',
-              boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
-              width: '300px',
-              maxHeight: '400px',
-              overflowY: 'auto',
-              zIndex: 1000,
-            }}>
-              {notification.length === 0 ? (
-                <p>No new notifications</p>
-              ) : (
-                notification.map((notif, index) => (
-                  <div
-                    key={index}
-                    className="notification-item"
-                    onClick={() => handleNotificationClick(notif.from)}
-                    style={{
-                      padding: '10px',
-                      borderBottom: '1px solid #ddd',
-                      cursor: 'pointer',
-                      transition: 'background-color 0.3s',
-                    }}
-                  >
-                    <p style={{ margin: '0', fontWeight: 'bold' }}>
-                      Message received from: {getSenderUsername(notif.from)}
-                    </p>
-                  </div>
-                ))
-              )}
-            </div>
-          )}
         </ContactContainerCss>
       )}
     </>

@@ -5,9 +5,8 @@ import ChatInput from "./ChatInput";
 import axios from "axios";
 import { sendMessageRoute, getAllMessageRoute } from "../utils/APIRoutes";
 import { v4 as uuidv4 } from "uuid";
-import debounce from 'lodash/debounce';
 
-export default function ChatContainer({ currentChat, currentUser, socket = [], setNotification, notification }) {
+export default function ChatContainer({ currentChat, currentUser, socket = [], setNotification }) {
   const [messages, setMessages] = useState([]);
   const [arrivalMessage, setArrivalMessage] = useState(null);
   const scrollRef = useRef();
@@ -37,46 +36,28 @@ export default function ChatContainer({ currentChat, currentUser, socket = [], s
       from: currentUser._id,
       message: msg,
     });
-    const messageData = {
-      to: currentChat._id,
-      from: currentUser._id,
-      message: msg,
-    };
-
-    console.log("Emitting message:", messageData);
-
-    socket.current.emit("send-msg", messageData);
     const msgs = [...messages];
     msgs.push({ fromSelf: true, message: msg });
     setMessages(msgs);
   };
 
-  // Debounced notification handler to prevent rapid updates
-  const debouncedHandleNotification = useRef(
-    debounce((msg) => {
-      setNotification((prev) => [...prev, { from: msg.from, content: msg.message }]);
-    }, 1000) // Adjust debounce time as needed
-  ).current;
-
   useEffect(() => {
     if (socket.current) {
       socket.current.on("msg-recieve", (msg) => {
-        console.log("Received message:", msg);
         if (currentChat && msg.from === currentChat._id) {
           setArrivalMessage({ fromSelf: false, message: msg });
         } else {
-          // Use debounced handler for notifications
-          debouncedHandleNotification(msg);
+          // Set notification for specific contact
+          setNotification((prev) => [...prev, { from: msg.from, content: msg.message }]);
         }
       });
     }
-
     return () => {
       if (socket.current) {
         socket.current.off("msg-recieve");
       }
     };
-  }, [socket, currentChat, setNotification, debouncedHandleNotification]);
+  }, [socket, currentChat, setNotification]);
 
   useEffect(() => {
     if (arrivalMessage) {
@@ -117,7 +98,6 @@ export default function ChatContainer({ currentChat, currentUser, socket = [], s
           </div>
         ))}
       </div>
-
       <ChatInput handleSendMsg={handleSendMsg} />
     </ChatContainerCss>
   );

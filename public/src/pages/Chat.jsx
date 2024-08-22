@@ -31,11 +31,11 @@ export default function Chat() {
   }, []);
 
   useEffect(() => {
-      if(currentUser) {
-        socket.current = io(host);
-        socket.current.emit("add-user", currentUser._id)
-      }
-  },[currentUser])
+    if (currentUser) {
+      socket.current = io(host);
+      socket.current.emit("add-user", currentUser._id)
+    }
+  }, [currentUser])
 
   useEffect(() => {
     const fetchContacts = async () => {
@@ -51,28 +51,33 @@ export default function Chat() {
     fetchContacts();
   }, [currentUser, navigate]);
 
-    const handleChatChange = (chat) => {
-      setCurrentChat(chat);
-    }
-
+  const handleChatChange = (chat) => {
+    setCurrentChat(chat);
+  }
 
   return (
     <HomePageContainerCss style={{ margin: '-8px' }}>
       <div className="container">
         <Contacts 
-            contacts={contacts} 
-            currentUser={currentUser} 
-            changeChat={handleChatChange}
-            notification={notification}
-            setNotification={setNotification}
+          contacts={contacts} 
+          currentUser={currentUser} 
+          changeChat={handleChatChange}
+          notification={notification}
+          setNotification={setNotification}
         />
-          {
-            currentChat === undefined ? (
+        {
+          currentChat === undefined ? (
             <Welcome currentUser={currentUser} />
-            ) : (
-              <ChatContainer currentChat={currentChat} currentUser={currentUser} socket={socket}   notification={notification} setNotification={setNotification}  />
-            )
-          }
+          ) : (
+            <ChatContainer 
+              currentChat={currentChat} 
+              currentUser={currentUser} 
+              socket={socket} 
+              notification={notification}
+              setNotification={setNotification}
+            />
+          )
+        }
       </div>
     </HomePageContainerCss>
   );
